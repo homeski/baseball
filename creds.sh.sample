@@ -1,0 +1,1 @@
+creds=`echo -n "username:password" | base64`
