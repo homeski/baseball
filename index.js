@@ -1,32 +1,110 @@
 #!/usr/bin/node
 
-var schedule = require('./data/schedule.json');
-var standings = require('./data/standings.json');
-
+var ArgumentParser = require('argparse').ArgumentParser;
+var parser = new ArgumentParser({
+  version: '0.0.1',
+  addHelp: true,
+  description: 'Argparse example'
+});
+var moment = require('moment');
 var Mustache = require('mustache');
+
+parser.addArgument(
+	[ '-a', '--action' ],
+	{
+		help: 'what to do...',
+		required: true,
+		choices: ['all', 'rate', 'stats']
+	}
+);
+var args = parser.parseArgs();
+
+function main() {
+	teams = getTeams();
+	games = getGames(teams);
+
+	switch (args.action) {
+		case 'all':
+			printGames(teams, games);
+			break;
+		case 'rate':
+			break;
+		case 'stats':
+		default:
+			break;
+	}
+}
+
+main();
+
+////////////////////
+//
+// getGames(teams)
+// getTeams()
+// printGames(teams, games)
+// calcStats(teams) 
 
 function getGames(teams) {
 	games = {};
+	
+	file = 'schedule_'+ moment().format('YYYYMMDD') + '.json';
+	schedule = require('./scripts/data/' + file);
 
   	schedule.dailygameschedule.gameentry.forEach(function(entry) {
   		games[entry.id] = {
-			awayID: 		entry.awayTeam.ID,
-			homeID: 		entry.homeTeam.ID,
-			loc: 			entry.location
+			awayID: 	entry.awayTeam.ID,
+			homeID: 	entry.homeTeam.ID,
+			loc: 		entry.location,
+			rating:	rateGame(teams[entry.awayTeam.ID], teams[entry.homeTeam.ID])
 		};
 	});
 
 	return games;
 }
 
-function getStandings() {
+function rateGame(away, home) {
+	var rating = {
+		favorite:			null,
+		underdog:			null,
+		runDifference:		0,
+		pitcherFriendly: 	0,
+		homeTeam: 			0,
+		betterDefense:		0
+	}
+
+	if (away.wins > home.wins) {
+		rating.favorite = away;
+		rating.underdog = home;
+	} else if (home.wins > away.wins) {
+		rating.favorite = home;
+		rating.underdog = away;
+	} else {
+		return null;
+	}
+
+	if (rating.favorite.rs > rating.underdog.rs)
+		rating.runDifference = (rating.favorite.rs - rating.underdog.rs);
+
+	if (rating.favorite.name === home.name)
+		rating.homeTeam = 1;
+
+	if (rating.favorite.ra < rating.underdog.ra)
+		rating.betterDefense = 1; 
+
+	return rating;
+}
+
+function getTeams() {
   	teams = {};
+	
+	file = 'standings_'+ moment().format('YYYYMMDD') + '.json';
+	standings = require('./scripts/data/' + file);
 
 	standings.overallteamstandings.teamstandingsentry.forEach(function(entry) {
 		teams[entry.team.ID] = {
 			city: entry.team.City,
 			name: entry.team.Name,
-			win:	parseInt(entry.stats.Wins['#text']),
+			wins:	parseInt(entry.stats.Wins['#text']),
 			loss: parseInt(entry.stats.Losses['#text']),
 			pct:  entry.stats.WinPct['#text'],
 			rs:   parseInt(entry.stats.RunsFor['#text']),
@@ -37,38 +115,38 @@ function getStandings() {
   	return teams;
 }
 
+function printGames(teams, games) {
+	for (var k in games) {
+   	var render = {
+			away: 	teams[games[k].awayID],
+			home: 	teams[games[k].homeID],
+			loc:  	games[k].loc
+   	};
 
-// returns true if better team (by wins)
-// has also scored more runs on the season
-//
-// return false otherwise or if teams have same wins
-function rateMatchup(team1, team2) {
-	var fav = team1.win >= team2.win ? team1 : team2;
-	var dog = team1.win >= team2.win ? team2 : team1;
-
-	if (fav.win == dog.win)
-		return false;
-	
-	if (fav.rs > dog.rs)
-		return true;
-
-	return false;
-}
-
-var teams = getStandings();
-var games = getGames(teams);
-
-for (var k in games) {
-   var render = {
-		away: 	teams[games[k].awayID],
-		home: 	teams[games[k].homeID],
-		loc:  	games[k].loc
-   };
-	
-	if (rateMatchup(render.away, render.home)) {
-		var output = Mustache.render("({{away.win}}-{{away.loss}} {{away.rs}}) {{away.name}} @ {{home.name}} ({{home.win}}-{{home.loss}} {{home.rs}})", render);
+		var output = Mustache.render("({{away.wins}}-{{away.loss}} {{away.rs}}) {{away.name}} @ {{home.name}} ({{home.wins}}-{{home.loss}} {{home.rs}})", render);
 		console.log(output);
+		console.log(games[k].rating);
 	}
 }
 
+function calcStats(teams) {
+	var stats = {};
+	var avgRuns, i, sum;
+	
+	rsSum = 0;
+	raSum = 0;
+	i = Object.keys(teams).length;
+	
+	for (var k in teams) {
+		rsSum += teams[k].rs;
+		raSum += teams[k].ra;
+	}
+
+	stats = {
+		avgRunsScored:		parseInt(rsSum / i),
+		avgRunsAgainst:	parseInt(raSum / i)
+	}
+
+	return stats;
+}
 
