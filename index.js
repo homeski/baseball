@@ -89,7 +89,7 @@ function rateGame(away, home) {
 		rating.homeTeam = 1;
 
 	if (rating.favorite.ra < rating.underdog.ra)
-		rating.betterDefense = 1; 
+		rating.betterDefense = (rating.favorite.ra - rating.underdog.ra); 
 
 	return rating;
 }
