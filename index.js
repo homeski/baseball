@@ -17,11 +17,21 @@ parser.addArgument(
 		choices: ['all', 'rate', 'stats']
 	}
 );
+parser.addArgument(
+	[ '-d', '--date' ],
+	{
+		help: 'single date to parse',
+	}
+);
 var args = parser.parseArgs();
 
 function main() {
-	teams = getTeams();
-	games = getGames(teams);
+	var date = args.date;
+	if (!date)
+		date = moment().format('YYYYMMDD');
+
+	teams = getTeams(date);
+	games = getGames(date, teams);
 
 	switch (args.action) {
 		case 'all':
@@ -44,10 +54,10 @@ main();
 // printGames(teams, games)
 // calcStats(teams) 
 
-function getGames(teams) {
+function getGames(date, teams) {
 	games = {};
 	
-	file = 'schedule_'+ moment().format('YYYYMMDD') + '.json';
+	file = 'schedule_'+ date + '.json';
 	schedule = require('./scripts/data/' + file);
 
   	schedule.dailygameschedule.gameentry.forEach(function(entry) {
@@ -94,10 +104,10 @@ function rateGame(away, home) {
 	return rating;
 }
 
-function getTeams() {
+function getTeams(date) {
   	teams = {};
 	
-	file = 'standings_'+ moment().format('YYYYMMDD') + '.json';
+	file = 'standings_'+ date + '.json';
 	standings = require('./scripts/data/' + file);
 
 	standings.overallteamstandings.teamstandingsentry.forEach(function(entry) {
