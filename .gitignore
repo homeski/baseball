@@ -1,5 +1,6 @@
 *.swp
 creds.sh
+*.retry
 
 scripts/data/*.json
 node_modules/

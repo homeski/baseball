@@ -1,0 +1,27 @@
+- name: Install Docker
+  hosts: all
+  remote_user: root
+
+  tasks:
+  - name: Install prerequisites
+    yum:
+      name: yum-utils
+      state: latest
+  - name: Install stable repository
+    shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    changed_when: False
+  - name: Update YUM index
+    shell: yum makecache fast
+    changed_when: False
+  - name: Install docker
+    yum:
+      name: docker-ce
+      state: latest
+  - name: Start and enable Docker
+    systemd:
+      name: docker
+      state: started
+      enabled: yes
+  - name: Verify Docker is installed
+    shell: docker run hello-world
+    changed_when: False
