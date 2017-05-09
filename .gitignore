@@ -1,5 +1,5 @@
 *.swp
 creds.sh
 
-data/*
+scripts/data/*.json
 node_modules/
