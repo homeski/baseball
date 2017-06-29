@@ -8,6 +8,9 @@ WORKDIR /usr/src/app
 COPY package.json /usr/src/app/
 RUN npm install
 
+# Copy photos
+COPY photos/ /usr/src/app/
+
 # Bundle app source
 COPY . /usr/src/app
 

@@ -1,0 +1,2 @@
+#!/bin/bash
+curl -d '{"text":"macbot"}' -H "Content-Type: application/json" localhost:3000/groupme
