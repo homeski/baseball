@@ -5,65 +5,64 @@ var bodyParser = require('body-parser');
 var request = require('request');
 var fs = require('fs');
 var shell = require('shelljs');
+var yaml = require('js-yaml')
 
-const DEBUG = false;
-var bot_id, group_id;
+// Init
+const DEBUG = true;
+const PORT = 8080;
+const BOT, TOKEN;
 
-if (DEBUG) {
-  bot_id = '66782dd3a2d5645feca4718af8';
-  group_id = '32060693';
-} else {
-  bot_id = '4b84658985fbdc082076840e85';
-  group_id = '13897405';
+// Load config and choose the correct bot
+// Get document, or throw exception on error
+try {
+  var doc = yaml.safeLoad(fs.readFileSync('./credentials.yaml', 'utf8'));
+} catch (e) {
+  console.log(e);
 }
 
-// request
+BOT = DEBUG == true ? doc.bots[0] : doc.bots[1];
+TOKEN = doc.access_token;
+
+// Build the base request for sending messages
 var msg_options = {
-    url: 'https://api.groupme.com/v3/bots/post?token=0RBWlSjAzqMbCApZl3hLRGl1CP2UqWRPeSQlseGn',
-    method: 'POST',
-    headers: {
-      'User-Agent': 'Super Agent/0.0.1',
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
+  url: 'https://api.groupme.com/v3/bots/post?token=' + TOKEN,
+  method: 'POST',
+  headers: {
+    'User-Agent': 'Super Agent/0.0.1',
+    'Content-Type': 'application/x-www-form-urlencoded'
+  }
 };
-//
 
-// Constants
-const PORT = 8080;
-
-// App
+// Express
 const app = express();
 app.use(bodyParser.json());
 
-app.get('/test', function (req, res) {
-  res.send('Hello world\n');
-  console.log('test');
-});
-
 app.post('/groupme', function (req, res) {
-  console.log(JSON.stringify(req.body));
-  console.log(req.body['text']);
-  res.send('thanks');
+  // Log incoming request body from chat post
+  console.log('body: ' + JSON.stringify(req.body));
 
+  // String match incoming messages
   var matchStr = 'MACBOT';
 
   if (req.body['text'].trim().toUpperCase().indexOf(matchStr) !== -1) {
+    // Submit photo to groupme photo service and get the image URL back
     var response = shell.exec("curl -s 'https://image.groupme.com/pictures' -X POST -H 'X-Access-Token: 0RBWlSjAzqMbCApZl3hLRGl1CP2UqWRPeSQlseGn' -H 'Content-Type: image/jpeg' --data-binary @./photos/`ls photos | shuf -n 1`").stdout;
     var img_url = JSON.parse(response).payload.url;
-    console.log(img_url);
+    console.log('img_url: ' + img_url);
 
-    msg_options.form = {'bot_id': bot_id, 'group_id': group_id, 'picture_url': img_url}
+    msg_options.form = {'bot_id': BOT.bot_id, 'group_id': BOT.group_id, 'picture_url': img_url}
 
     // respond yes?
     request(msg_options, function (error, response, body) {
       if (!error && response.statusCode == 200) {
-        console.log(JSON.stringify(body));
-        console.log(JSON.stringify(response));
+        console.log(JSON.stringify('body: ' + body));
+        console.log(JSON.stringify('response: ' + response));
       } else {
-        console.log(error);
+        console.log('error: ' + error);
       }
     });
-    
+
+    res.send('Thanks');
   }
 });
 
