@@ -71,6 +71,8 @@ function postMsg(options) {
     defaults.picture_url = options.picture_url;
   }
 
+  msg_options.form = defaults;
+
   request(msg_options, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       console.log(JSON.stringify('body: ' + body));
