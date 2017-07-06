@@ -42,18 +42,16 @@ app.post('/groupme', function (req, res) {
   // Log incoming request body from chat post
   console.log('body: ' + JSON.stringify(req.body));
 
-  // String match incoming messages
-  var matchStr = 'MACBOT';
-
-  if (req.body['text'].trim().toUpperCase().indexOf(matchStr) !== -1) {
+  // Match any string containing 'macbot'
+  if (req.body['text'].trim().toUpperCase().indexOf('MACBOT') !== -1) {
     // Submit photo to groupme photo service and get the image URL back
     var response = shell.exec("curl -s 'https://image.groupme.com/pictures' -X POST -H 'X-Access-Token: 0RBWlSjAzqMbCApZl3hLRGl1CP2UqWRPeSQlseGn' -H 'Content-Type: image/jpeg' --data-binary @./photos/`ls photos | shuf -n 1`").stdout;
     var img_url = JSON.parse(response).payload.url;
     console.log('img_url: ' + img_url);
 
-    msg_options.form = {'bot_id': BOT.bot_id, 'group_id': BOT.group_id, 'picture_url': img_url}
+    msg_options.form = {'bot_id': BOT.bot_id, 'group_id': BOT.group_id, 'picture_url': img_url};
 
-    // respond yes?
+    // respond 
     request(msg_options, function (error, response, body) {
       if (!error && response.statusCode == 200) {
         console.log(JSON.stringify('body: ' + body));
@@ -64,6 +62,19 @@ app.post('/groupme', function (req, res) {
     });
 
     res.send('Thanks');
+  // Match any string from Mac containing '^stupid'
+  } else if ((req.body['text'].trim().toUpperCase().indexOf('^STUPID') !== -1 || req.body['text'].trim().toUpperCase().indexOf('^ STUPID') !== -1) && req.body['sender_id'] === '27041248') {
+    msg_options.form = {'bot_id': BOT.bot_id, 'group_id': BOT.group_id, 'text': '^stupid'};
+
+    // respond 
+    request(msg_options, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        console.log(JSON.stringify('body: ' + body));
+        console.log(JSON.stringify('response: ' + response));
+      } else {
+        console.log('error: ' + error);
+      }
+    });
   }
 });
 
