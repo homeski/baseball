@@ -10,7 +10,7 @@ var yaml = require('js-yaml')
 // Init
 const DEBUG = true;
 const PORT = 8080;
-const BOT, TOKEN;
+var BOT, TOKEN;
 
 // Load config and choose the correct bot
 // Get document, or throw exception on error
@@ -18,6 +18,7 @@ try {
   var doc = yaml.safeLoad(fs.readFileSync('./credentials.yaml', 'utf8'));
 } catch (e) {
   console.log(e);
+  process.exit(1);
 }
 
 BOT = DEBUG == true ? doc.bots[0] : doc.bots[1];
