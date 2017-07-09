@@ -38,7 +38,11 @@ kill)
   sudo docker kill macbot$TAG
   sudo docker rm macbot$TAG
   ;;
+watch)
+  echo watch $TAG
+  sudo docker logs -f macbot$TAG
+  ;;
 *)
-  echo 'unknown command. use build | run | test | kill and -d for debug'
+  echo 'unknown command. use build | run | test | kill | watch and -d for debug'
   ;;
 esac

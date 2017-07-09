@@ -1,3 +1,0 @@
-#!/bin/bash
-sudo docker kill groupme
-sudo docker rm groupme
