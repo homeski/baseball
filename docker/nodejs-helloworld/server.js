@@ -54,7 +54,6 @@ app.post('/groupme', function (req, res) {
 
     postMsg({'picture_url': img_url});
 
-  // Match any string from Mac containing '^stupid'
   } else if ((text.indexOf('^STUPID') !== -1 || text.indexOf('^ STUPID') !== -1) && req.body['sender_id'] === '27041248') {
     postMsg({'text': '^stupid'});
   }
