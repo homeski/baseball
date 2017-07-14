@@ -8,7 +8,7 @@ var shell = require('shelljs');
 var yaml = require('js-yaml')
 
 // Init
-const DEBUG = true;
+const DEBUG = false;
 const PORT = 8080;
 var BOT, TOKEN;
 
@@ -57,6 +57,8 @@ app.post('/groupme', function (req, res) {
   // Match any string from Mac containing '^stupid'
   } else if ((text.indexOf('^STUPID') !== -1 || text.indexOf('^ STUPID') !== -1) && req.body['sender_id'] === '27041248') {
     postMsg({'text': '^stupid'});
+  } else if (text.indexOf('^') !== -1 && req.body['sender_id'] === '27041248') {
+    postMsg({'text': req.body['text']});
   }
 });
 
